@@ -7,9 +7,7 @@
 <script>
   export default{
     mounted () {
-      this.$store.dispatch('setTest', 7).then(() => {
-        console.log(this.$store.state.book.test)
-      })
+      
     }
   }
   document.addEventListener('DOMContentLoaded', () => {
