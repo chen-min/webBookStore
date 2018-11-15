@@ -9,6 +9,16 @@
 import { ebookMixin } from '../../utils/mixin'
 import Epub from 'epubjs'
 import { setTimeout } from 'timers';
+import {
+    getFontFamily,
+    saveFontFamily,
+    getFontSize,
+    saveFontSize,
+    getTheme,
+    saveTheme,
+    getLocation
+} from '../../utils/localStorage'
+
 
 global.ePub  = Epub
 export default {
@@ -20,6 +30,7 @@ export default {
             // const url = process.env.VUE_APP_RES_URL + '/epub/' + this.fileName + '.epub'
             const url = baseUrl + '/epub/' + this.fileName + '.epub'
             this.book = new Epub(url)
+            this.setCurrentBook(this.book)
             this.initRendition()
             this.initGesture()
 
@@ -31,7 +42,42 @@ export default {
             method: 'default'
             })
             // console.log(this.ren)
-            this.rendition.display()
+            this.rendition.display().then(() => {
+                this.initFontSize()
+                this.initFontFamily()
+            })
+            this.rendition.hooks.content.register(contents => {
+                // console.log(`${process.env.VUE_APP_RES_URLA}`,'process.env.VUE_APP_RES_URLa')
+                let url = 'http://localhost:9000'
+                Promise.all([
+                    contents.addStylesheet(`${url}/fonts/daysOne.css`),
+                    contents.addStylesheet(`${url}/fonts/cabin.css`),
+                    contents.addStylesheet(`${url}/fonts/montserrat.css`),
+                    contents.addStylesheet(`${url}/fonts/tangerine.css`),
+                    ]).then(() => {
+                    })
+            })
+        },
+        initFontSize() {  
+            let fontSize = getFontSize(this.fileName)
+            if(!fontSize) {
+                console.log('111')
+                saveFontSize(this.fileName, this.defaultFontSize)
+            } else {
+                console.log('222')
+              this.rendition.themes.fontSize(fontSize)
+              this.setDefaultFontSize(fontSize)
+            }
+        },
+        initFontFamily() {
+            let font = getFontFamily(this.fileName)
+
+            if (!font) {
+              saveFontFamily(this.fileName, this.defaultFontFamily)
+            } else {
+              this.rendition.themes.font(font)
+              this.setDefaultFontFamily(font)
+            }        
         },
         initGesture(){
             this.rendition.on('touchstart', event => {
@@ -48,6 +94,8 @@ export default {
                 } else {
                     this.toggleTitleAndMenu()
                 }
+                event.preventDefault()
+                event.stopPropagation()
             })
         },
         prevPage(){
@@ -61,6 +109,11 @@ export default {
             }
         },
         toggleTitleAndMenu() {
+            if (this.menuVisible) {
+                this.setSettingVisible(-1)
+                this.setFontFamilyVisible(false)
+
+            }
             this.setMenuVisible(!this.menuVisible)
         }
     },
@@ -68,7 +121,6 @@ export default {
         console.log('created')
     },
     mounted() {
-        console.log(this.$route.params.fileName,'this.$route.params.fileName')
         this.setFileName(this.$route.params.fileName.split('|').join('/')).then(() => {
             console.log('mounted函数')
             this.initEpub()
