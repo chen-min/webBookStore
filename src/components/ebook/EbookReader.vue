@@ -45,9 +45,10 @@ export default {
             this.rendition.display().then(() => {
                 this.initFontSize()
                 this.initFontFamily()
+                this.initTheme()
+                this.initGlobalStyle()
             })
             this.rendition.hooks.content.register(contents => {
-                // console.log(`${process.env.VUE_APP_RES_URLA}`,'process.env.VUE_APP_RES_URLa')
                 let url = 'http://localhost:9000'
                 Promise.all([
                     contents.addStylesheet(`${url}/fonts/daysOne.css`),
@@ -61,10 +62,8 @@ export default {
         initFontSize() {  
             let fontSize = getFontSize(this.fileName)
             if(!fontSize) {
-                console.log('111')
                 saveFontSize(this.fileName, this.defaultFontSize)
             } else {
-                console.log('222')
               this.rendition.themes.fontSize(fontSize)
               this.setDefaultFontSize(fontSize)
             }
@@ -78,6 +77,18 @@ export default {
               this.rendition.themes.font(font)
               this.setDefaultFontFamily(font)
             }        
+        },
+        initTheme() {
+            let defaultTheme = getTheme(this.fileName)
+            if(!defaultTheme) {
+                defaultTheme = this.themeList[0].fileName
+                saveTheme(this.fileName, defaultTheme)
+            }
+            this.setDefaultTheme(defaultTheme)
+            this.themeList.forEach(theme => {
+                this.rendition.themes.register(theme.name, theme.style)
+            })
+            this.rendition.themes.select(defaultTheme)
         },
         initGesture(){
             this.rendition.on('touchstart', event => {
