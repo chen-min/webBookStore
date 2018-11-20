@@ -33,6 +33,13 @@ export default {
             this.setCurrentBook(this.book)
             this.initRendition()
             this.initGesture()
+            this.book.ready.then(() => {
+                return this.book.locations.generate(750 * (window.innerWidth / 375) * (getFontSize(this.fileName) / 16))
+            }).then(locations => {
+                this.setBookAvailable(true)
+                console.log(this.bookAvailable,'aval')
+                this.refreshLocation()
+            })
 
         },
         initRendition(){
@@ -47,6 +54,7 @@ export default {
                 this.initFontFamily()
                 this.initTheme()
                 this.initGlobalStyle()
+                this.refreshLocation()
             })
             this.rendition.hooks.content.register(contents => {
                 let url = 'http://localhost:9000'
@@ -111,13 +119,22 @@ export default {
         },
         prevPage(){
             if(this.rendition){
-                this.rendition.prev()
+                this.rendition.prev().then(() => {
+                    this.refreshLocation()
+                })
             }
+            this.hideTitleAndMenu()
+
         },
         nextPage() {
             if(this.rendition){
-                this.rendition.next()
+                this.rendition.next().then(() => {
+                this.refreshLocation()
+              })
+
             }
+            this.hideTitleAndMenu()
+
         },
         toggleTitleAndMenu() {
             if (this.menuVisible) {
